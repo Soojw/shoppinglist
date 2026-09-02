@@ -116,29 +116,44 @@ class _DashboardPageState extends State<DashboardPage> {
   String _getSmartImageUrl(String itemName) {
     String name = itemName.toLowerCase();
 
-    if (name.contains('ayam')) {
-      return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
-      return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('bawang')) {
-      return 'https://images.unsplash.com/photo-1518977822532-8d61bc227fb4?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('cili') || name.contains('sayur') || name.contains('kobis') || name.contains('tomato')) {
-      return 'https://images.unsplash.com/photo-1596162954151-cdcb927f8b72?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('telur ayam')) {
+    if (name.contains('telur')) {
       return 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('minyak')) {
+    }
+    else if (name.contains('ayam')) {
+      return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
+    }
+    else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
+      return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
+    }
+    else if (name.contains('bawang')) {
+      return 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80';
+    }
+    else if (name.contains('cili')) {
+
+      return 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=800';
+    }
+    else if (name.contains('kacang')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Peanuts.jpg?width=800';
+    }
+    else if (name.contains('tomato')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Tomatoes.jpg?width=800';
+    }
+    else if (name.contains('sayur') || name.contains('kobis')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Vegetables.jpg?width=800';
+    }
+    else if (name.contains('minyak')) {
       return 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('susu')) {
-      return 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('beras')) {
+    }
+    else if (name.contains('beras')) {
       return 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('kacang')) {
-      return 'https://images.unsplash.com/photo-1536511132770-e5088eb440ae?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('100 plus') || name.contains('100plus') || name.contains('100-plus')) {
-      return 'https://images.unsplash.com/photo-1600271886742-f049cd451b02?auto=format&fit=crop&w=800&q=80';
-    } else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
+    }
+    else if (name.contains('100 plus') || name.contains('100plus') || name.contains('100-plus')) {
+      return 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=800&q=80';
+    }
+    else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
       return 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80';
     }
+
     return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80';
   }
 
