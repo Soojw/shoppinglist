@@ -49,7 +49,7 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
 
     setState(() {
       _searchRadius = prefs.getDouble('search_radius') ?? 15.0;
-      _selectedPlace = prefs.getString('selected_place') ?? 'Current GPS Location';
+      _selectedPlace = prefs.getString('global_active_location') ?? 'Current GPS Location';
     });
   }
 
@@ -62,7 +62,7 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
   Future<void> _selectPlace(String place) async {
     setState(() => _selectedPlace = place);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('selected_place', place);
+    await prefs.setString('global_active_location', place);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Location switched to $place'), backgroundColor: const Color(0xFF059669), duration: const Duration(milliseconds: 800)));
@@ -97,7 +97,7 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('saved_places_list', _savedPlaces);
-      await prefs.setString('selected_place', _selectedPlace);
+      await prefs.setString('global_active_location', _selectedPlace);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Place removed successfully.'), backgroundColor: Colors.redAccent, duration: Duration(milliseconds: 800)));
@@ -205,7 +205,7 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setStringList('saved_places_list', _savedPlaces);
-      await prefs.setString('selected_place', finalPlace);
+      await prefs.setString('global_active_location', finalPlace);
 
       if (mounted) FocusScope.of(context).unfocus();
     }
@@ -232,8 +232,6 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-
             Container(
               decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
               child: SwitchListTile(
@@ -245,8 +243,6 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
               ),
             ),
             const SizedBox(height: 32),
-
-
 
             const Text('Add a Custom Location', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: deepSlate)),
             const SizedBox(height: 12),
@@ -272,7 +268,6 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
               ),
             ),
             const SizedBox(height: 16),
-
 
             Container(
               decoration: BoxDecoration(
@@ -351,8 +346,6 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
             ),
             const SizedBox(height: 32),
 
-
-
             const Text('Your Saved Places', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: deepSlate)),
             const SizedBox(height: 12),
             Container(
@@ -393,7 +386,6 @@ class _LocationServicesPageState extends State<LocationServicesPage> {
               ),
             ),
             const SizedBox(height: 32),
-
 
             const Text('Search Radius', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: deepSlate)),
             const SizedBox(height: 12),

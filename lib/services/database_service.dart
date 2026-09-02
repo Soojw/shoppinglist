@@ -303,14 +303,16 @@ class DatabaseService {
 
     Batch batch = db.batch();
 
-
-    bool isPromoMessage = title.contains('Promo');
+    bool isPromoMessage = title.toLowerCase().contains('promo');
+    bool isAnnouncementMessage = title.toLowerCase().contains('announcement');
 
     for (var user in users) {
       if (isPromoMessage && user['wants_promotions'] == 0) {
         continue;
       }
-
+      if (isAnnouncementMessage && user['wants_newsletter'] == 0) {
+        continue;
+      }
 
       batch.insert('Notifications', {
         'user_email': user['email'],
@@ -375,5 +377,26 @@ class DatabaseService {
     await _ensureTicketsTableExists(db);
 
     await db.update('Tickets', {'status': 'Resolved'}, where: 'id = ?', whereArgs: [id]);
+
+    final ticketData = await db.query('Tickets', where: 'id = ?', whereArgs: [id]);
+    if (ticketData.isNotEmpty) {
+      String userEmail = ticketData.first['user_email'] as String;
+
+      if (userEmail != 'guest@smartshopping.com') {
+        final userData = await db.query('Users', where: 'email = ?', whereArgs: [userEmail]);
+        if (userData.isNotEmpty) {
+          int wantsTicketUpdate = userData.first['wants_order_updates'] as int;
+
+          if (wantsTicketUpdate == 1) {
+            String ticketCategory = ticketData.first['category'] as String;
+            await sendNotification(
+                userEmail,
+                'Ticket Resolved ✨',
+                'Your support ticket regarding "$ticketCategory" has been resolved by Admin.'
+            );
+          }
+        }
+      }
+    }
   }
 }

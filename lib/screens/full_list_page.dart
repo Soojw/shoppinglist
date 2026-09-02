@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/database_service.dart';
 import '../models/price_model.dart';
 import 'product_page.dart';
@@ -15,11 +18,57 @@ class FullListPage extends StatefulWidget {
 class _FullListPageState extends State<FullListPage> {
   List<PriceDropItem> allProducts = [];
   bool _isLoading = true;
+  String _userStateFilter = "";
 
   @override
   void initState() {
     super.initState();
-    _fetchAggregatedData();
+    _initData();
+  }
+
+  Future<void> _initData() async {
+    await _loadLocationContext();
+    await _fetchAggregatedData();
+  }
+
+  Future<void> _loadLocationContext() async {
+    final prefs = await SharedPreferences.getInstance();
+    String active = prefs.getString('global_active_location') ?? 'Current GPS Location';
+
+    try {
+      if (active == 'Current GPS Location') {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?lat=${position.latitude}&lon=${position.longitude}&format=json');
+          final response = await http.get(url, headers: {'User-Agent': 'SmartShoppingDemoApp'});
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final address = data['address'] ?? {};
+            String state = address['state'] ?? address['city'] ?? 'Kuala Lumpur';
+            _userStateFilter = state.replaceAll('W.P. ', '').replaceAll('Wilayah Persekutuan ', '');
+          }
+        }
+      } else {
+        String addressToSearch = active;
+        if (addressToSearch.contains('(')) {
+          addressToSearch = addressToSearch.substring(addressToSearch.indexOf('(') + 1, addressToSearch.lastIndexOf(')'));
+        }
+        final url = Uri.parse('https://nominatim.openstreetmap.org/search?q=${Uri.encodeComponent('$addressToSearch, Malaysia')}&format=json&addressdetails=1&limit=1');
+        final response = await http.get(url, headers: {'User-Agent': 'SmartShoppingDemoApp'});
+
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          if (data.isNotEmpty) {
+            final address = data[0]['address'] ?? {};
+            String state = address['state'] ?? address['city'] ?? 'Kuala Lumpur';
+            _userStateFilter = state.replaceAll('W.P. ', '').replaceAll('Wilayah Persekutuan ', '');
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Full List Page State filter error: $e");
+    }
   }
 
   List<String> _parseCsvRow(String row) {
@@ -57,6 +106,13 @@ class _FullListPageState extends State<FullListPage> {
           List<String> cols = _parseCsvRow(row);
           if (cols.length < 12) continue;
 
+          String storeState = cols[11].trim().toLowerCase();
+          if (_userStateFilter.isNotEmpty) {
+            if (!storeState.contains(_userStateFilter.toLowerCase()) && !_userStateFilter.toLowerCase().contains(storeState)) {
+              continue;
+            }
+          }
+
           String safeBarcode = cols.length >= 14 ? cols[13].trim() : 'N/A';
           double p = double.tryParse(cols[3].trim()) ?? 0.0;
           String priceStr = 'RM ${p.toStringAsFixed(2)}';
@@ -84,12 +140,12 @@ class _FullListPageState extends State<FullListPage> {
 
     if (mounted) {
       setState(() {
-        List<PriceDropItem> top15 = grouped.values.take(15).toList();
-        for (var item in top15) {
+        List<PriceDropItem> topList = grouped.values.take(30).toList();
+        for (var item in topList) {
           double p = double.tryParse(item.newPrice.replaceAll('RM ', '')) ?? 0.0;
           item.oldPrice = 'RM ${(p * 1.2).toStringAsFixed(2)}';
         }
-        allProducts = top15;
+        allProducts = topList;
         _isLoading = false;
       });
     }
@@ -106,7 +162,7 @@ class _FullListPageState extends State<FullListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: primaryGreen))
           : allProducts.isEmpty
-          ? const Center(child: Text('No products available.', style: TextStyle(color: Colors.grey)))
+          ? const Center(child: Text('No products available in this area.', style: TextStyle(color: Colors.grey)))
           : ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: allProducts.length,

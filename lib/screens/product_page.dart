@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/cart_model.dart';
 import '../models/price_model.dart';
 import '../services/database_service.dart';
@@ -26,13 +30,59 @@ class _ProductPageState extends State<ProductPage> {
   bool _isFavorited = false;
   bool _isLoading = true;
 
+  String _userStateFilter = "";
+  String _globalActiveLocation = "Current GPS Location";
+
   @override
   void initState() {
     super.initState();
+    _initPageData();
+  }
+
+  Future<void> _initPageData() async {
+    if (!widget.isAdminView) {
+      await _loadLocationContext();
+    }
+
     if (widget.isAdminView) {
-      _isLoading = false;
+      if (mounted) setState(() => _isLoading = false);
     } else {
-      _checkFavoriteStatus();
+      await _checkFavoriteStatus();
+    }
+  }
+
+  Future<void> _loadLocationContext() async {
+    final prefs = await SharedPreferences.getInstance();
+    String active = prefs.getString('global_active_location') ?? 'Current GPS Location';
+    _globalActiveLocation = active;
+
+    try {
+      String upperActive = active.toUpperCase();
+      if (upperActive.contains('KUALA LUMPUR') || upperActive.contains('KL') || upperActive.contains('WANGSA MAJU') || upperActive.contains('TARUMT')) {
+        _userStateFilter = "Kuala Lumpur";
+      } else if (upperActive.contains('SELANGOR') || upperActive.contains('PETALING') || upperActive.contains('SHAH ALAM') || upperActive.contains('KELANA JAYA')) {
+        _userStateFilter = "Selangor";
+      } else if (upperActive.contains('PENANG') || upperActive.contains('GEORGETOWN')) {
+        _userStateFilter = "Pulau Pinang";
+      } else if (active == 'Current GPS Location') {
+        bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+        if (serviceEnabled) {
+          Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+          final url = Uri.parse('https://nominatim.openstreetmap.org/reverse?lat=${position.latitude}&lon=${position.longitude}&format=json');
+          final response = await http.get(url, headers: {'User-Agent': 'SmartShoppingDemoApp'});
+          if (response.statusCode == 200) {
+            final data = json.decode(response.body);
+            final address = data['address'] ?? {};
+            String state = address['state'] ?? address['city'] ?? 'Kuala Lumpur';
+            _userStateFilter = state.replaceAll('W.P. ', '').replaceAll('Wilayah Persekutuan ', '');
+          }
+        }
+      } else {
+        _userStateFilter = "Kuala Lumpur";
+      }
+    } catch (e) {
+      debugPrint("Product Page State filter error: $e");
+      _userStateFilter = "Kuala Lumpur";
     }
   }
 
@@ -44,9 +94,11 @@ class _ProductPageState extends State<ProductPage> {
         _isFavorited = true;
       }
     }
-    setState(() {
-      _isLoading = false;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   void _handleFavoriteTap() async {
@@ -92,7 +144,8 @@ class _ProductPageState extends State<ProductPage> {
                   Navigator.pop(context);
                   final result = await Navigator.push(context, MaterialPageRoute(builder: (context) => const UserLoginPage()));
                   if (result == true) {
-                    _checkFavoriteStatus();
+                    setState(() => _isLoading = true);
+                    _initPageData();
                   }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF059669), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
@@ -250,7 +303,23 @@ class _ProductPageState extends State<ProductPage> {
     const Color deepSlate = Color(0xFF1E293B);
     const Color primaryGreen = Color(0xFF059669);
 
-    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator(color: primaryGreen)));
+
+    List<StorePrice> displayStores = widget.item.storePrices;
+    if (!widget.isAdminView && _userStateFilter.isNotEmpty) {
+      var filtered = widget.item.storePrices.where((sp) {
+        String storeState = sp.state.toLowerCase();
+        String target = _userStateFilter.toLowerCase();
+        if (target == 'kuala lumpur' && (storeState.contains('kuala lumpur') || storeState.contains('wilayah persekutuan') || storeState.contains('w.p.'))) {
+          return true;
+        }
+        return storeState.contains(target) || target.contains(storeState);
+      }).toList();
+
+      if (filtered.isNotEmpty) {
+        displayStores = filtered;
+      }
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
@@ -307,15 +376,15 @@ class _ProductPageState extends State<ProductPage> {
                         Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(widget.item.oldPrice, style: const TextStyle(fontSize: 18, color: Colors.grey, decoration: TextDecoration.lineThrough, fontWeight: FontWeight.bold))),
                       ],
                       const Spacer(),
-                      const Padding(padding: EdgeInsets.only(bottom: 6), child: Text('NATIONWIDE', style: TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 1.0))),
+                      Padding(padding: const EdgeInsets.only(bottom: 6), child: Text(widget.isAdminView ? 'NATIONWIDE' : (_userStateFilter.isNotEmpty ? _userStateFilter.toUpperCase() : 'NATIONWIDE'), style: const TextStyle(fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold, letterSpacing: 1.0))),
                     ],
                   ),
                   const SizedBox(height: 40),
 
-                  if (widget.item.storePrices.isNotEmpty) ...[
-                    const Text('Prices at Different Stores', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: deepSlate)),
+                  if (displayStores.isNotEmpty) ...[
+                    Text(widget.isAdminView ? 'Prices at Different Stores' : (_userStateFilter.isNotEmpty ? 'Prices in $_userStateFilter' : 'Prices at Different Stores'), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: deepSlate)),
                     const SizedBox(height: 16),
-                    ...widget.item.storePrices.map((sp) {
+                    ...displayStores.map((sp) {
                       return Container(
                         margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.grey.shade200)),
