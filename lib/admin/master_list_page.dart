@@ -36,8 +36,10 @@ class _MasterListPageState extends State<MasterListPage> {
       return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
       return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('bawang')) {
+      return 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('cili') || name.contains('sayur') || name.contains('kobis') || name.contains('tomato')) {
-      return 'https://images.unsplash.com/photo-1596162954151-cdcb927f8b72?auto=format&fit=crop&w=800&q=80';
+      return 'https://images.unsplash.com/photo-1518977673343-a4e614c11100?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('telur')) {
       return 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('minyak')) {
@@ -45,7 +47,11 @@ class _MasterListPageState extends State<MasterListPage> {
     } else if (name.contains('susu')) {
       return 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('beras')) {
-      return 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80';
+      return 'https://images.unsplash.com/photo-1516684732162-798a0062be99?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('kacang')) {
+      return 'https://images.unsplash.com/photo-1599598425947-3300bbba235c?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('100 plus') || name.contains('100plus') || name.contains('100-plus')) {
+      return 'https://images.unsplash.com/photo-1581006852262-e4307cf6283a?auto=format&fit=crop&w=800&q=80';
     } else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
       return 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80';
     }
