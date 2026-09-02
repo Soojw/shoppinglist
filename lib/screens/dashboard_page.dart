@@ -113,6 +113,29 @@ class _DashboardPageState extends State<DashboardPage> {
     return 'GOOD EVENING';
   }
 
+  String _getSmartImageUrl(String itemName) {
+    String name = itemName.toLowerCase();
+
+    if (name.contains('ayam')) {
+      return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
+      return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('cili') || name.contains('sayur') || name.contains('kobis') || name.contains('tomato')) {
+      return 'https://images.unsplash.com/photo-1596162954151-cdcb927f8b72?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('telur')) {
+      return 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('minyak')) {
+      return 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('susu')) {
+      return 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('beras')) {
+      return 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
+      return 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80';
+  }
+
   List<String> _parseCsvRow(String row) {
     List<String> cols = []; StringBuffer currentCol = StringBuffer(); bool insideQuotes = false;
     for (int i = 0; i < row.length; i++) {
@@ -164,7 +187,7 @@ class _DashboardPageState extends State<DashboardPage> {
             grouped[code] = PriceDropItem(
               itemCode: code, barcode: safeBarcode, category: cols[7].trim(), title: cols[4].trim(),
               oldPrice: '', newPrice: priceStr, store: cols[8].trim(), details: 'Source: Data.gov.my',
-              imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+              imageUrl: _getSmartImageUrl(cols[4].trim()),
               isLocal: false, storePrices: [sp],
             );
           }
@@ -223,7 +246,8 @@ class _DashboardPageState extends State<DashboardPage> {
             grouped[code] = PriceDropItem(
               itemCode: code, barcode: cols.length >= 14 ? cols[13].trim() : 'N/A', category: cols[7].trim(), title: title,
               oldPrice: '', newPrice: priceStr, store: cols[8].trim(), details: 'Data.gov.my',
-              imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800', isLocal: false,
+              imageUrl: _getSmartImageUrl(title),
+              isLocal: false,
             );
           }
         }

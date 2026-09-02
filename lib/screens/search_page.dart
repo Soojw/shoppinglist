@@ -39,6 +39,28 @@ class _SearchPageState extends State<SearchPage> {
     _initializeSearch();
   }
 
+  String _getSmartImageUrl(String itemName) {
+    String name = itemName.toLowerCase();
+    if (name.contains('ayam')) {
+      return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
+      return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('cili') || name.contains('sayur') || name.contains('kobis') || name.contains('tomato')) {
+      return 'https://images.unsplash.com/photo-1596162954151-cdcb927f8b72?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('telur')) {
+      return 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('minyak')) {
+      return 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('susu')) {
+      return 'https://images.unsplash.com/photo-1550583724-b2692b85b150?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('beras')) {
+      return 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
+      return 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80';
+  }
+
   Future<void> _initializeSearch() async {
     await _loadLocationsAndData();
   }
@@ -221,10 +243,11 @@ class _SearchPageState extends State<SearchPage> {
         if (grouped.containsKey(code)) {
           grouped[code]!.storePrices.add(sp);
         } else {
+          String fallbackName = item['item_name'] ?? 'Unknown';
           grouped[code] = PriceDropItem(
             itemCode: code, barcode: item['barcode'] ?? 'N/A', category: item['category'] ?? 'UNKNOWN',
-            title: item['item_name'] ?? 'Unknown', oldPrice: '', newPrice: priceStr, store: 'Local Store', details: 'Local DB',
-            imageUrl: item['image_url'] ?? 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+            title: fallbackName, oldPrice: '', newPrice: priceStr, store: 'Local Store', details: 'Local DB',
+            imageUrl: (item['image_url'] != null && item['image_url'].toString().isNotEmpty) ? item['image_url'] : _getSmartImageUrl(fallbackName),
             isLocal: true, storePrices: [sp],
           );
         }
@@ -250,6 +273,8 @@ class _SearchPageState extends State<SearchPage> {
           double p = double.tryParse(cols[3].trim()) ?? 0.0;
           String priceStr = 'RM ${p.toStringAsFixed(2)}';
           String code = cols[2].trim();
+          String itemName = cols[4].trim();
+
           StorePrice sp = StorePrice(storeName: cols[8].trim(), price: priceStr, state: cols[11].trim(), date: cols[0].trim());
 
           if (grouped.containsKey(code)) {
@@ -258,9 +283,9 @@ class _SearchPageState extends State<SearchPage> {
             if (p < currentMin) grouped[code]!.newPrice = priceStr;
           } else {
             grouped[code] = PriceDropItem(
-              itemCode: code, barcode: safeBarcode, category: cols[7].trim(), title: cols[4].trim(),
+              itemCode: code, barcode: safeBarcode, category: cols[7].trim(), title: itemName,
               oldPrice: '', newPrice: priceStr, store: cols[8].trim(), details: 'Source: Data.gov.my',
-              imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+              imageUrl: _getSmartImageUrl(itemName),
               isLocal: false, storePrices: [sp],
             );
           }
