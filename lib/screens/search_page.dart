@@ -418,7 +418,7 @@ class _SearchPageState extends State<SearchPage> {
                 ],
 
                 const SizedBox(height: 40),
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Search Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: deepSlate)), TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FullListPage(title: 'All Item'))), child: const Text('View All >', style: TextStyle(color: Colors.grey)))]),
+                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('Search Results', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: deepSlate)), TextButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FullListPage(title: 'All Product Item'))), child: const Text('View All >', style: TextStyle(color: Colors.grey)))]),
                 const SizedBox(height: 10),
                 if (isLoading) const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator(color: primaryGreen)))
                 else if (filteredProducts.isEmpty) const Center(child: Padding(padding: EdgeInsets.all(32.0), child: Text('No matching products found in this area.', style: TextStyle(color: Colors.grey))))

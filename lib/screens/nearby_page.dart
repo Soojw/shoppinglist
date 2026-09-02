@@ -93,12 +93,27 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
     final prefs = await SharedPreferences.getInstance();
     _currentRadius = prefs.getDouble('search_radius') ?? 15.0;
 
-    String rawPlace = prefs.getString('selected_place') ?? 'Current GPS Location';
-    _currentPlaceName = rawPlace.split(' (').first;
+    String activeSetting = prefs.getString('global_active_location') ?? 'Current GPS Location';
+    _currentPlaceName = activeSetting.contains(' (') ? activeSetting.split(' (').first : activeSetting;
 
-    if (rawPlace == 'Current GPS Location') {
+    if (activeSetting == 'Current GPS Location') {
       await _getCurrentLocation(isInit: true);
     } else {
+      String addressToSearch = activeSetting;
+      if (addressToSearch.contains('(')) {
+        addressToSearch = addressToSearch.substring(addressToSearch.indexOf('(') + 1, addressToSearch.lastIndexOf(')'));
+      }
+
+      LatLng? coords = await _geocodeAddress('ACTIVE_PLACE', addressToSearch);
+      if (coords != null) {
+        _mapCenter = coords;
+      } else {
+        _mapCenter = const LatLng(3.140853, 101.693207);
+      }
+
+      if (mounted) {
+        _mapController.move(_mapCenter, 14.0);
+      }
       await _fetchRealPremisesFromCsv();
     }
   }
@@ -300,7 +315,6 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
 
           storeAddresses[storeName] = searchAddr;
 
-
           if (hasItemsInCart) {
             int cartQuantity = 0;
             bool isInCart = false;
@@ -491,6 +505,7 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
                           child: GestureDetector(
                             onTap: () async {
                               final prefs = await SharedPreferences.getInstance();
+                              await prefs.setString('global_active_location', 'Current GPS Location');
                               await prefs.setString('selected_place', 'Current GPS Location');
                               _getCurrentLocation();
                             },

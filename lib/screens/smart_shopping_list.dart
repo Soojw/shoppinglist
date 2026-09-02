@@ -102,7 +102,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
       ),
       body: Column(
         children: [
-
           const Padding(
             padding: EdgeInsets.all(20.0),
             child: Column(
@@ -159,7 +158,7 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                 height: 56,
                 child: ElevatedButton(
                   onPressed: () async {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Analyzing Dual Locations... ⏳'), backgroundColor: primaryGreen, duration: Duration(milliseconds: 1000)));
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Analyzing Active Location... ⏳'), backgroundColor: primaryGreen, duration: Duration(milliseconds: 1000)));
 
                     final items = await DatabaseService().getCartItems();
                     if (items.isEmpty) return;
@@ -173,7 +172,26 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                     final prefs = await SharedPreferences.getInstance();
                     double searchRadius = prefs.getDouble('search_radius') ?? 15.0;
 
+                    String activeLocationSetting = prefs.getString('global_active_location') ?? 'Current GPS Location';
+                    LatLng activeCenterPos = const LatLng(3.140853, 101.693207);
 
+                    if (activeLocationSetting == 'Current GPS Location') {
+                      try {
+                        Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+                        if (!(position.latitude > 10.0 || position.latitude < 0.0 || position.longitude < 98.0 || position.longitude > 120.0)) {
+                          activeCenterPos = LatLng(position.latitude, position.longitude);
+                        }
+                      } catch (e) { debugPrint("GPS error: $e"); }
+                    } else {
+                      String addressToGeocode = activeLocationSetting;
+                      if (activeLocationSetting.contains('(')) {
+                        addressToGeocode = activeLocationSetting.substring(activeLocationSetting.indexOf('(') + 1, activeLocationSetting.lastIndexOf(')'));
+                      }
+                      LatLng? customCoords = await _geocodeAddress('ACTIVE_POINT', addressToGeocode);
+                      if (customCoords != null) {
+                        activeCenterPos = customCoords;
+                      }
+                    }
 
                     LatLng gpsPos = const LatLng(3.140853, 101.693207);
                     try {
@@ -182,7 +200,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                         gpsPos = LatLng(position.latitude, position.longitude);
                       }
                     } catch (e) { debugPrint("GPS error: $e"); }
-
 
                     LatLng? customPos;
                     String customPlaceName = '';
@@ -193,7 +210,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                         customPlaceName = place;
                         String addressToGeocode = place;
                         if (place.contains('(')) {
-
                           addressToGeocode = place.substring(place.indexOf('(') + 1, place.lastIndexOf(')'));
                         }
                         customPos = await _geocodeAddress('START_POINT', addressToGeocode);
@@ -203,7 +219,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
 
                     final Distance distanceCalc = const Distance();
                     int priceColIndex = 3, itemNameColIndex = 4, storeNameColIndex = 8, addressColIndex = 9, stateColIndex = 11;
-
 
                     Map<String, double> storeBillsGps = {};
                     Map<String, dynamic> storeDetailsGps = {};
@@ -246,13 +261,11 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                           if (pos != null) {
                             String searchAddr = '$storeName ${cols[addressColIndex].trim()} ${cols[stateColIndex].trim()}'.trim();
 
-
-                            double kmGps = distanceCalc.as(LengthUnit.Kilometer, gpsPos, pos);
+                            double kmGps = distanceCalc.as(LengthUnit.Kilometer, activeCenterPos, pos);
                             if (kmGps <= searchRadius) {
                               storeBillsGps[storeName] = (storeBillsGps[storeName] ?? 0.0) + (realPrice * cartQuantity);
                               storeDetailsGps[storeName] = {'address': searchAddr, 'position': pos, 'distance': kmGps};
                             }
-
 
                             if (customPos != null) {
                               double kmCustom = distanceCalc.as(LengthUnit.Kilometer, customPos, pos);
@@ -265,7 +278,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                         }
                       }
                     } catch (e) { debugPrint("CSV error: $e"); }
-
 
                     String bestStoreGps = 'No exact matches in ${searchRadius.toInt()}km';
                     double bestPriceGps = baseTotalPrice;
@@ -283,7 +295,6 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                       bestAddrGps = storeDetailsGps[bestStoreGps]['address'];
                     }
                     double savedGps = (baseTotalPrice - bestPriceGps) > 0 ? (baseTotalPrice - bestPriceGps) : 0.0;
-
 
                     String bestStoreCustom = 'No exact matches in ${searchRadius.toInt()}km';
                     double bestPriceCustom = baseTotalPrice;
@@ -322,15 +333,13 @@ class _SmartShoppingPageState extends State<SmartShoppingPage> {
                                   Text('Compared real prices within your ${searchRadius.toInt()}km radius.', style: const TextStyle(color: Colors.grey)),
                                   const SizedBox(height: 24),
 
-
                                   _buildResultCard(
-                                      context: context, title: '📍 Based on Current GPS',
+                                      context: context, title: activeLocationSetting == 'Current GPS Location' ? '📍 Based on Current GPS' : '🏠 Based on Active Place:\n$activeLocationSetting',
                                       storeName: bestStoreGps, price: bestPriceGps, savedAmt: savedGps,
-                                      pos: bestPosGps, address: bestAddrGps, originPos: gpsPos
+                                      pos: bestPosGps, address: bestAddrGps, originPos: activeCenterPos
                                   ),
 
-
-                                  if (customPos != null) ...[
+                                  if (customPos != null && activeLocationSetting == 'Current GPS Location') ...[
                                     const SizedBox(height: 16),
                                     _buildResultCard(
                                         context: context, title: '🏠 Based on Saved Place:\n$customPlaceName',
