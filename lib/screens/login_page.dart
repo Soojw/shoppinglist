@@ -22,7 +22,7 @@ class _LoginPageState extends State<LoginPage> {
 
     if (input.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter username/email and password'), backgroundColor: Colors.redAccent)
+          const SnackBar(content: Text('Please enter the username/email and password'), backgroundColor: Colors.redAccent)
       );
       return;
     }
