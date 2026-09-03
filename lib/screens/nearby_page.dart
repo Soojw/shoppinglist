@@ -56,11 +56,13 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
 
   static final Map<String, LatLng> _geoCache = {};
 
+  String _lastActiveLocationSetting = 'UNSET';
+  bool _isCheckingUpdates = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initializeMapData();
   }
 
   @override
@@ -73,27 +75,44 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      _checkForRadiusUpdates();
+      _checkGlobalSettingsUpdates();
     }
   }
 
-  Future<void> _checkForRadiusUpdates() async {
+  Future<void> _checkGlobalSettingsUpdates() async {
+    if (_isCheckingUpdates) return;
+    _isCheckingUpdates = true;
+
     final prefs = await SharedPreferences.getInstance();
     double savedRadius = prefs.getDouble('search_radius') ?? 15.0;
-    if (savedRadius != _currentRadius) {
-      setState(() {
-        _currentRadius = savedRadius;
-      });
-      await _fetchRealPremisesFromCsv();
+    String activeSetting = prefs.getString('global_active_location') ?? 'Current GPS Location';
+
+    if (_lastActiveLocationSetting == 'UNSET') {
+      _lastActiveLocationSetting = activeSetting;
+      _currentRadius = savedRadius;
+      await _initializeMapData();
+    } else if (savedRadius != _currentRadius || activeSetting != _lastActiveLocationSetting) {
+      _currentRadius = savedRadius;
+      _lastActiveLocationSetting = activeSetting;
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+          _resetSelection();
+        });
+      }
+      await _initializeMapData();
     }
+
+    _isCheckingUpdates = false;
   }
 
   Future<void> _initializeMapData() async {
-    setState(() => _isLoading = true);
+    if (mounted) setState(() => _isLoading = true);
     final prefs = await SharedPreferences.getInstance();
     _currentRadius = prefs.getDouble('search_radius') ?? 15.0;
 
     String activeSetting = prefs.getString('global_active_location') ?? 'Current GPS Location';
+    _lastActiveLocationSetting = activeSetting;
     _currentPlaceName = activeSetting.contains(' (') ? activeSetting.split(' (').first : activeSetting;
 
     if (activeSetting == 'Current GPS Location') {
@@ -436,7 +455,7 @@ class _NearbyPageState extends State<NearbyPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    _checkForRadiusUpdates();
+    _checkGlobalSettingsUpdates();
 
     const Color primaryGreen = Color(0xFF059669);
     const Color deepSlate = Color(0xFF1E293B);

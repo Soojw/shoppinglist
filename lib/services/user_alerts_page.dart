@@ -22,6 +22,37 @@ class _UserAlertsPageState extends State<UserAlertsPage> {
     _loadFavorites();
   }
 
+  String _getSmartImageUrl(String itemName) {
+    String name = itemName.toLowerCase();
+
+    if (name.contains('telur')) {
+      return 'https://images.unsplash.com/photo-1582722872445-44dc5f7e3c8f?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('ayam')) {
+      return 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('ikan') || name.contains('sotong') || name.contains('udang')) {
+      return 'https://images.unsplash.com/photo-1615141982883-c7ad0e69fd62?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('bawang')) {
+      return 'https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('cili')) {
+      return 'https://images.pexels.com/photos/1435904/pexels-photo-1435904.jpeg?auto=compress&cs=tinysrgb&w=800';
+    } else if (name.contains('kacang')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Peanuts.jpg?width=800';
+    } else if (name.contains('tomato')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Tomatoes.jpg?width=800';
+    } else if (name.contains('sayur') || name.contains('kobis')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/Vegetables.jpg?width=800';
+    } else if (name.contains('minyak')) {
+      return 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('beras')) {
+      return 'https://images.unsplash.com/photo-1586201375761-83865001e8ac?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('100 plus') || name.contains('100plus') || name.contains('100-plus')) {
+      return 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=800&q=80';
+    } else if (name.contains('milo') || name.contains('nescafe') || name.contains('teh') || name.contains('kopi') || name.contains('minuman') || name.contains('air')) {
+      return 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=800&q=80';
+    }
+    return 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=800&q=80';
+  }
+
   List<String> _parseCsvRow(String row) {
     List<String> cols = [];
     StringBuffer currentCol = StringBuffer();
@@ -52,7 +83,6 @@ class _UserAlertsPageState extends State<UserAlertsPage> {
         String code = item['item_code'] ?? 'LOCAL';
         String title = item['item_name'] ?? 'Unknown';
 
-
         if (!favoriteIds.contains(code) && !favoriteIds.contains(title)) continue;
 
         String priceStr = item['price'] != null ? 'RM ${item['price']}' : 'N/A';
@@ -64,7 +94,7 @@ class _UserAlertsPageState extends State<UserAlertsPage> {
           grouped[code] = PriceDropItem(
             itemCode: code, barcode: item['barcode'] ?? 'N/A', category: item['category'] ?? 'UNKNOWN',
             title: title, oldPrice: '', newPrice: priceStr, store: 'Local Store', details: 'Local DB',
-            imageUrl: item['image_url'] ?? 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+            imageUrl: (item['image_url'] != null && item['image_url'].toString().isNotEmpty) ? item['image_url'] : _getSmartImageUrl(title),
             isLocal: true, storePrices: [sp],
           );
         }
@@ -84,7 +114,6 @@ class _UserAlertsPageState extends State<UserAlertsPage> {
           String code = cols[2].trim();
           String title = cols[4].trim();
 
-
           if (!favoriteIds.contains(code) && !favoriteIds.contains(title)) continue;
 
           String safeBarcode = cols.length >= 14 ? cols[13].trim() : 'N/A';
@@ -101,7 +130,7 @@ class _UserAlertsPageState extends State<UserAlertsPage> {
             grouped[code] = PriceDropItem(
               itemCode: code, barcode: safeBarcode, category: cols[7].trim(), title: title,
               oldPrice: '', newPrice: priceStr, store: cols[8].trim(), details: 'Source: Data.gov.my',
-              imageUrl: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=800',
+              imageUrl: _getSmartImageUrl(title),
               isLocal: false, storePrices: [sp],
             );
           }
