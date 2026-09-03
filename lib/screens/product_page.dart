@@ -329,7 +329,6 @@ class _ProductPageState extends State<ProductPage> {
         actions: [
           if (!widget.isAdminView) ...[
             IconButton(icon: Icon(_isFavorited ? Icons.favorite : Icons.favorite_border, color: _isFavorited ? Colors.redAccent : deepSlate), onPressed: _handleFavoriteTap),
-            IconButton(icon: const Icon(Icons.share, color: deepSlate), onPressed: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sharing coming soon!')))),
           ],
         ],
       ),
